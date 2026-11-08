@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HighlightIcon, type HighlightKind } from "@/components/about/highlight-icon";
+import { ContactForm } from "@/components/contact-form";
 import { Reveal } from "@/components/reveal";
 
 export const metadata: Metadata = {
@@ -75,29 +76,7 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* Marcador temporal: el Paso 7 lo reemplaza por <ContactForm /> con la Server Action. */}
-          <form className="contact-form">
-            <div className="field">
-              <label htmlFor="c-name">NOMBRE</label>
-              <input id="c-name" name="name" placeholder="px_kai" />
-            </div>
-            <div className="field">
-              <label htmlFor="c-email">CORREO ELECTRÓNICO</label>
-              <input id="c-email" name="email" type="email" placeholder="jugador@vault.gg" />
-            </div>
-            <div className="field">
-              <label htmlFor="c-message">MENSAJE</label>
-              <textarea
-                id="c-message"
-                name="message"
-                rows={5}
-                placeholder="Cuéntanos qué tienes en mente…"
-              ></textarea>
-            </div>
-            <button className="btn xl press" type="submit" style={{ width: "100%" }}>
-              ▶&nbsp;&nbsp;ENVIAR MENSAJE
-            </button>
-          </form>
+          <ContactForm />
         </div>
       </Reveal>
     </div>
