@@ -7,9 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "db:types": "supabase gen types typescript --linked --schema public > lib/supabase/database.types.ts",
+    "db:push": "supabase db push",
+    "db:new": "supabase migration new"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.119.0",
     "next": "16.4.4",
     "react": "19.3.0",
     "react-dom": "19.3.0",
@@ -24,6 +29,7 @@
     "eslint-config-next": "16.4.4",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.10",
+    "supabase": "^3.1.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
