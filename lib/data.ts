@@ -16,7 +16,12 @@ export type Game = {
   plays: string;
 };
 
-export type ScoreRow = { rank: number; name: string; score: number; date: string };
+export type ScoreRow = {
+  rank: number;
+  name: string;
+  score: number;
+  date: string;
+};
 
 export const GAMES: Game[] = [
   {
@@ -78,7 +83,7 @@ export const GAMES: Game[] = [
     id: "rocas",
     title: "ROCAS",
     short: "Pulveriza asteroides en gravedad cero.",
-    long: "Tu nave triangular flota en vacío absoluto. Dispara y rota para dividir rocas en fragmentos cada vez más pequeños. Cuidado con los OVNIs en el horizonte.",
+    long: "Tu nave triangular flota en vacío absoluto. Dispara y rota para dividir rocas en fragmentos cada vez más pequeños. Recoge el power-up de triple disparo para limpiar el campo antes de que te acorralen.",
     cat: "SHOOTER",
     cover: "cover-rocas",
     color: "yellow",
@@ -112,9 +117,24 @@ export const GAMES: Game[] = [
 export const CATS = ["TODOS", "ARCADE", "PUZZLE", "SHOOTER", "VERSUS"] as const;
 
 const PLAYERS = [
-  "PX_KAI", "NEONFOX", "Z3R0COOL", "M00NRYU", "VAULT_07", "GLITCHA",
-  "ATARI_KID", "CYBER_LU", "MAGENTA88", "SCANLINE", "BIT_LORD", "ARKADYA",
-  "DROID_X", "RGB_QUEEN", "PIXEL_DAD", "RETROVIRA", "VECTORX", "JOY_STK",
+  "PX_KAI",
+  "NEONFOX",
+  "Z3R0COOL",
+  "M00NRYU",
+  "VAULT_07",
+  "GLITCHA",
+  "ATARI_KID",
+  "CYBER_LU",
+  "MAGENTA88",
+  "SCANLINE",
+  "BIT_LORD",
+  "ARKADYA",
+  "DROID_X",
+  "RGB_QUEEN",
+  "PIXEL_DAD",
+  "RETROVIRA",
+  "VECTORX",
+  "JOY_STK",
 ];
 
 /** Puntuaciones deterministas (sin Math.random) para evitar diferencias servidor/cliente. */
@@ -133,15 +153,23 @@ export function seededScores(seed: number, count = 12): ScoreRow[] {
     const score = base - i * Math.floor(2000 + rand() * 4000);
     const day = String(1 + Math.floor(rand() * 28)).padStart(2, "0");
     const mon = String(1 + Math.floor(rand() * 12)).padStart(2, "0");
-    rows.push({ rank: i + 1, name, score: Math.max(score, 1000), date: `${day}/${mon}/2026` });
+    rows.push({
+      rank: i + 1,
+      name,
+      score: Math.max(score, 1000),
+      date: `${day}/${mon}/2026`,
+    });
   }
-  return rows.sort((a, b) => b.score - a.score).map((r, i) => ({ ...r, rank: i + 1 }));
+  return rows
+    .sort((a, b) => b.score - a.score)
+    .map((r, i) => ({ ...r, rank: i + 1 }));
 }
 
 /** Formatea números con separadores es-ES. */
 export const fmt = (n: number): string => n.toLocaleString("es-ES");
 
-export const getGame = (id: string): Game | undefined => GAMES.find((g) => g.id === id);
+export const getGame = (id: string): Game | undefined =>
+  GAMES.find((g) => g.id === id);
 
 /* ===== Home (landing) — datos mock estáticos ===== */
 
@@ -194,13 +222,55 @@ export const HOME_FEATURES: HomeFeature[] = [
 ];
 
 export const RECENT_SCORES: RecentScore[] = [
-  { player: "NEONFOX", game: "Caída", score: 184220, ago: "hace 2 min", color: "magenta" },
-  { player: "PX_KAI", game: "Glotón", score: 96400, ago: "hace 5 min", color: "yellow" },
-  { player: "Z3R0COOL", game: "Invasores", score: 54190, ago: "hace 8 min", color: "green" },
-  { player: "VAULT_07", game: "Rocas", score: 41200, ago: "hace 12 min", color: "cyan" },
-  { player: "GLITCHA", game: "Bloque Buster", score: 28450, ago: "hace 18 min", color: "cyan" },
-  { player: "ARKADYA", game: "Serpentina", score: 7820, ago: "hace 24 min", color: "green" },
-  { player: "CYBER_LU", game: "Ranaria", score: 18900, ago: "hace 31 min", color: "yellow" },
+  {
+    player: "NEONFOX",
+    game: "Caída",
+    score: 184220,
+    ago: "hace 2 min",
+    color: "magenta",
+  },
+  {
+    player: "PX_KAI",
+    game: "Glotón",
+    score: 96400,
+    ago: "hace 5 min",
+    color: "yellow",
+  },
+  {
+    player: "Z3R0COOL",
+    game: "Invasores",
+    score: 54190,
+    ago: "hace 8 min",
+    color: "green",
+  },
+  {
+    player: "VAULT_07",
+    game: "Rocas",
+    score: 41200,
+    ago: "hace 12 min",
+    color: "cyan",
+  },
+  {
+    player: "GLITCHA",
+    game: "Bloque Buster",
+    score: 28450,
+    ago: "hace 18 min",
+    color: "cyan",
+  },
+  {
+    player: "ARKADYA",
+    game: "Serpentina",
+    score: 7820,
+    ago: "hace 24 min",
+    color: "green",
+  },
+  {
+    player: "CYBER_LU",
+    game: "Ranaria",
+    score: 18900,
+    ago: "hace 31 min",
+    color: "yellow",
+  },
 ];
 
 export const TOP_PLAYERS: TopPlayer[] = [

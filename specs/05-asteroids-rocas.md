@@ -1,6 +1,6 @@
 # SPEC 05 — Asteroids jugable como "ROCAS"
 
-> **Status:** Aprobado
+> **Status:** Implementado
 > **Depends on:** SPEC 01
 > **Date:** 2026-11-14
 > **Objective:** Portar a TypeScript el juego Asteroids de `references/started-games/02-asteroids` y hacerlo jugable en `/juego/rocas/jugar` dentro del reproductor CRT, con el HUD, la pausa y el modal de fin de partida de la plataforma.
