@@ -15,11 +15,15 @@ import {
 import { useUser } from "@/components/user-provider";
 import { fmt, type Game } from "@/lib/data";
 import type { AsteroidsCallbacks } from "@/lib/games/asteroids/types";
+import { submitScore } from "@/lib/leaderboard/actions";
+import { normalizePlayerName } from "@/lib/leaderboard/validation";
 
 const LIVES = 3;
 
 // ready: overlay "PULSA ESPACIO" (solo juego real) · over: modal de fin de partida
 type Phase = "ready" | "playing" | "paused" | "over";
+
+type SaveState = "idle" | "saving" | "error" | "saved";
 
 // Táctil sin ningún puntero fino = sin teclado razonable.
 const TOUCH_ONLY_QUERY = "(pointer: coarse) and (not (any-pointer: fine))";
@@ -48,7 +52,7 @@ function isEditable(target: EventTarget | null) {
 }
 
 export function GamePlayer({ game }: { game: Game }) {
-  const { user, saveScore } = useUser();
+  const { user } = useUser();
   // Solo ROCAS tiene motor real; el resto mantiene la simulación de puntos.
   const isReal = game.id === "rocas";
   const engineRef = useRef<AsteroidsHandle>(null);
@@ -58,13 +62,14 @@ export function GamePlayer({ game }: { game: Game }) {
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(LIVES);
   const [realLevel, setRealLevel] = useState(1);
-  const [saved, setSaved] = useState(false);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
   // null = sin editar: se usa el nombre de la sesión (que se carga tras hidratar) o INVITADO
   const [editedName, setEditedName] = useState<string | null>(null);
 
   const paused = phase === "paused";
   const over = phase === "over";
-  const name = editedName ?? user?.name ?? "INVITADO";
+  // Siempre normalizado: A–Z, 0–9 y _, máx. 10 (mismas reglas que el CHECK de la base).
+  const name = editedName ?? normalizePlayerName(user?.name ?? "INVITADO");
   const level = isReal ? realLevel : 1 + Math.floor(score / 2500);
   const shownLives = isReal ? lives : LIVES;
 
@@ -128,7 +133,7 @@ export function GamePlayer({ game }: { game: Game }) {
 
   const restart = () => {
     setScore(0);
-    setSaved(false);
+    setSaveState("idle");
     if (isReal) {
       engineRef.current?.reset();
       setLives(LIVES);
@@ -139,9 +144,15 @@ export function GamePlayer({ game }: { game: Game }) {
     }
   };
 
-  const handleSave = () => {
-    saveScore({ game: game.id, score, name });
-    setSaved(true);
+  const handleSave = async () => {
+    if (saveState === "saving") return;
+    setSaveState("saving");
+    try {
+      const result = await submitScore({ game: game.id, score, name });
+      setSaveState(result.ok ? "saved" : "error");
+    } catch {
+      setSaveState("error"); // red caída o acción no disponible
+    }
   };
 
   return (
@@ -279,22 +290,37 @@ export function GamePlayer({ game }: { game: Game }) {
             <h2>FIN DEL JUEGO</h2>
             <div className="final-label">PUNTUACIÓN FINAL</div>
             <div className="final">{fmt(score)}</div>
-            {!saved ? (
+            {!isReal ? (
+              <div className="demo-note">MODO DEMO · NO PUNTÚA</div>
+            ) : saveState !== "saved" ? (
               <div className="input-row">
                 <input
                   value={name}
                   onChange={(e) =>
-                    setEditedName(e.target.value.toUpperCase().slice(0, 10))
+                    setEditedName(normalizePlayerName(e.target.value))
                   }
+                  maxLength={10}
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  spellCheck={false}
                   placeholder="TUS INICIALES"
                   aria-label="Tus iniciales"
+                  disabled={saveState === "saving"}
                 />
                 <button
                   type="button"
-                  className="btn yellow"
+                  className={
+                    "btn " + (saveState === "error" ? "magenta" : "yellow")
+                  }
                   onClick={handleSave}
+                  disabled={saveState === "saving" || name === ""}
+                  aria-live="polite"
                 >
-                  GUARDAR PUNTUACIÓN
+                  {saveState === "saving"
+                    ? "GUARDANDO…"
+                    : saveState === "error"
+                      ? "NO SE PUDO GUARDAR · REINTENTAR"
+                      : "GUARDAR PUNTUACIÓN"}
                 </button>
               </div>
             ) : (
