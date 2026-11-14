@@ -1359,6 +1359,15 @@ a {
   margin-top: 18px;
   flex-wrap: wrap;
 }
+.modal .demo-note {
+  margin: 22px 0 12px;
+  padding: 12px;
+  border: 1px dashed var(--line);
+  font-family: var(--pixel);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--ink-dim);
+}
 .toast-saved {
   font-family: var(--pixel);
   font-size: 11px;
@@ -1676,6 +1685,18 @@ a {
   letter-spacing: 0.16em;
   background: rgba(245, 255, 0, 0.04);
   border-bottom: 1px solid var(--line-2);
+}
+.hall-table .hall-msg {
+  padding: 36px 18px;
+  text-align: center;
+  font-family: var(--pixel);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+}
+.hall-table .hall-msg.error {
+  color: var(--magenta);
+  text-shadow: 0 0 6px rgba(255, 0, 110, 0.45);
 }
 @keyframes rise {
   from {

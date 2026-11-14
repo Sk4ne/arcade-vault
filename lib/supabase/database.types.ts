@@ -9,10 +9,58 @@ export type Database = {
   }
   "public": {
           Tables: {
-            [_ in never]: never
+            "games": {
+                  Row: {
+                    "id": string,"playable": boolean,"title": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "id": string,"playable"?: boolean,"title": string
+                  }
+                  Update: {
+                    "id"?: string,"playable"?: boolean,"title"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"scores": {
+                  Row: {
+                    "created_at": string,"game_id": string,"id": number,"player_name": string,"score": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"game_id": string,"id"?: never,"player_name": string,"score": number
+                  }
+                  Update: {
+                    "created_at"?: string,"game_id"?: string,"id"?: never,"player_name"?: string,"score"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "scores_game_id_fkey"
+      columns: ["game_id"]
+isOneToOne: false
+      referencedRelation: "games"
+      referencedColumns: ["id"]
+    }
+                  ]
+                }
           }
           Views: {
-            [_ in never]: never
+            "leaderboard": {
+                  Row: {
+                    "created_at": string,"game_id": string,"player_name": string,"rank": number | null,"score": number
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "scores_game_id_fkey"
+      columns: ["game_id"]
+isOneToOne: false
+      referencedRelation: "games"
+      referencedColumns: ["id"]
+    }
+                  ]
+                }
           }
           Functions: {
             [_ in never]: never
