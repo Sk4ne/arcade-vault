@@ -17,7 +17,7 @@ import {
   rand,
   type Palette,
 } from "./entities";
-import type { AsteroidsCallbacks, AsteroidsGame } from "./types";
+import type { GameCallbacks, GameEngine } from "../types";
 
 type EngineState = "ready" | "playing" | "dead" | "paused" | "gameover";
 
@@ -58,8 +58,8 @@ function isEditable(target: EventTarget | null) {
 
 export function createAsteroidsGame(
   canvas: HTMLCanvasElement,
-  callbacks: AsteroidsCallbacks,
-): AsteroidsGame {
+  callbacks: GameCallbacks,
+): GameEngine {
   const ctxOrNull = canvas.getContext("2d");
   if (!ctxOrNull) throw new Error("Canvas 2D no disponible");
   const ctx: CanvasRenderingContext2D = ctxOrNull;
@@ -138,11 +138,11 @@ export function createAsteroidsGame(
     }
     if (lives !== emittedLives) {
       emittedLives = lives;
-      callbacks.onLives(lives);
+      callbacks.onLives?.(lives);
     }
     if (level !== emittedLevel) {
       emittedLevel = level;
-      callbacks.onLevel(level);
+      callbacks.onLevel?.(level);
     }
   }
 
