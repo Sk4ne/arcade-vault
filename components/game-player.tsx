@@ -8,16 +8,15 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import {
-  AsteroidsCanvas,
-  type AsteroidsHandle,
-} from "@/components/games/asteroids-canvas";
+import { GameCanvas, type GameHandle } from "@/components/games/game-canvas";
 import { useUser } from "@/components/user-provider";
 import { fmt, type Game } from "@/lib/data";
-import type { AsteroidsCallbacks } from "@/lib/games/asteroids/types";
+import { getPlayableGame } from "@/lib/games/registry";
+import type { GameCallbacks, PlayableGame } from "@/lib/games/types";
 import { submitScore } from "@/lib/leaderboard/actions";
 import { normalizePlayerName } from "@/lib/leaderboard/validation";
 
+// Vidas que muestra la simulación de los juegos sin motor real.
 const LIVES = 3;
 
 // ready: overlay "PULSA ESPACIO" (solo juego real) · over: modal de fin de partida
@@ -42,6 +41,12 @@ function useTouchOnly() {
   );
 }
 
+function initialStats(playable: PlayableGame | undefined) {
+  return Object.fromEntries(
+    (playable?.extraStats ?? []).map((s) => [s.key, s.initial]),
+  );
+}
+
 function isEditable(target: EventTarget | null) {
   return (
     target instanceof HTMLElement &&
@@ -53,15 +58,17 @@ function isEditable(target: EventTarget | null) {
 
 export function GamePlayer({ game }: { game: Game }) {
   const { user } = useUser();
-  // Solo ROCAS tiene motor real; el resto mantiene la simulación de puntos.
-  const isReal = game.id === "rocas";
-  const engineRef = useRef<AsteroidsHandle>(null);
+  // Juegos del registro: motor real. El resto mantiene la simulación de puntos.
+  const playable = getPlayableGame(game.id);
+  const isReal = playable !== undefined;
+  const engineRef = useRef<GameHandle>(null);
   const touchOnly = useTouchOnly();
 
   const [phase, setPhase] = useState<Phase>(isReal ? "ready" : "playing");
   const [score, setScore] = useState(0);
-  const [lives, setLives] = useState(LIVES);
+  const [lives, setLives] = useState(playable?.lives ?? LIVES);
   const [realLevel, setRealLevel] = useState(1);
+  const [stats, setStats] = useState(() => initialStats(playable));
   const [saveState, setSaveState] = useState<SaveState>("idle");
   // null = sin editar: se usa el nombre de la sesión (que se carga tras hidratar) o INVITADO
   const [editedName, setEditedName] = useState<string | null>(null);
@@ -72,6 +79,9 @@ export function GamePlayer({ game }: { game: Game }) {
   const name = editedName ?? normalizePlayerName(user?.name ?? "INVITADO");
   const level = isReal ? realLevel : 1 + Math.floor(score / 2500);
   const shownLives = isReal ? lives : LIVES;
+  // Simulados: HUD de siempre (Vidas y Nivel). Reales: según el registro.
+  const showLives = !playable || playable.lives !== null;
+  const showLevel = !playable || playable.hasLevel;
 
   // Simulación: solo para los juegos sin motor real.
   useEffect(() => {
@@ -96,11 +106,12 @@ export function GamePlayer({ game }: { game: Game }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isReal, phase]);
 
-  const callbacks = useMemo<AsteroidsCallbacks>(
+  const callbacks = useMemo<GameCallbacks>(
     () => ({
       onScore: setScore,
       onLives: setLives,
       onLevel: setRealLevel,
+      onStat: (key, value) => setStats((s) => ({ ...s, [key]: value })),
       onGameOver: (finalScore) => {
         setScore(finalScore);
         setPhase("over");
@@ -134,10 +145,11 @@ export function GamePlayer({ game }: { game: Game }) {
   const restart = () => {
     setScore(0);
     setSaveState("idle");
-    if (isReal) {
+    if (playable) {
       engineRef.current?.reset();
-      setLives(LIVES);
+      setLives(playable.lives ?? LIVES);
       setRealLevel(1);
+      setStats(initialStats(playable));
       setPhase("ready");
     } else {
       setPhase("playing");
@@ -169,14 +181,24 @@ export function GamePlayer({ game }: { game: Game }) {
             <div className="l">Puntuación</div>
             <div className="v">{fmt(score)}</div>
           </div>
-          <div className="hud-stat lives">
-            <div className="l">Vidas</div>
-            <div className="v">{"♥ ".repeat(shownLives).trim() || "—"}</div>
-          </div>
-          <div className="hud-stat level">
-            <div className="l">Nivel</div>
-            <div className="v">{String(level).padStart(2, "0")}</div>
-          </div>
+          {showLives && (
+            <div className="hud-stat lives">
+              <div className="l">Vidas</div>
+              <div className="v">{"♥ ".repeat(shownLives).trim() || "—"}</div>
+            </div>
+          )}
+          {playable?.extraStats.map((stat) => (
+            <div className="hud-stat" key={stat.key}>
+              <div className="l">{stat.label}</div>
+              <div className="v">{stats[stat.key] ?? stat.initial}</div>
+            </div>
+          ))}
+          {showLevel && (
+            <div className="hud-stat level">
+              <div className="l">Nivel</div>
+              <div className="v">{String(level).padStart(2, "0")}</div>
+            </div>
+          )}
         </div>
         <div className="hud-actions">
           <button
@@ -203,8 +225,13 @@ export function GamePlayer({ game }: { game: Game }) {
 
       <div className="crt">
         <div className="crt-screen">
-          {isReal ? (
-            <AsteroidsCanvas ref={engineRef} callbacks={callbacks} />
+          {playable ? (
+            <GameCanvas
+              ref={engineRef}
+              create={playable.create}
+              callbacks={callbacks}
+              ariaLabel={playable.ariaLabel}
+            />
           ) : (
             <div className="game-arena">
               <div className="grid-floor"></div>
@@ -214,7 +241,7 @@ export function GamePlayer({ game }: { game: Game }) {
               <div className="player-ship"></div>
             </div>
           )}
-          {isReal && phase === "ready" && (
+          {playable && phase === "ready" && (
             <div className="crt-content start-overlay">
               {touchOnly ? (
                 <>
@@ -235,19 +262,21 @@ export function GamePlayer({ game }: { game: Game }) {
                     PULSA ESPACIO PARA EMPEZAR
                   </div>
                   <ul className="controls-legend" aria-label="Controles">
-                    <li>
-                      <kbd className="keycap">←</kbd>
-                      <kbd className="keycap">→</kbd>
-                      rotar
-                    </li>
-                    <li>
-                      <kbd className="keycap">↑</kbd>
-                      propulsar
-                    </li>
-                    <li>
-                      <kbd className="keycap wide">ESPACIO</kbd>
-                      disparar
-                    </li>
+                    {playable.controls.map((hint) => (
+                      <li key={hint.label}>
+                        {hint.keys.map((key) => (
+                          <kbd
+                            key={key}
+                            className={
+                              key.length > 1 ? "keycap wide" : "keycap"
+                            }
+                          >
+                            {key}
+                          </kbd>
+                        ))}
+                        {hint.label}
+                      </li>
+                    ))}
                   </ul>
                 </>
               )}
