@@ -1,6 +1,6 @@
 # SPEC 07 — Juego de piezas que caen jugable como "CAÍDA"
 
-> **Status:** Aprobado
+> **Status:** Implementado
 > **Depends on:** SPEC 05, SPEC 06
 > **Date:** 2026-11-16
 > **Objective:** Portar a TypeScript el juego de `references/started-games/03-tetris` como CAÍDA jugable en `/juego/caida/jugar`, con el HUD, la pausa y el modal de la plataforma y sus puntuaciones en el Salón de la Fama.

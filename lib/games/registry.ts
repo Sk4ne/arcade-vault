@@ -1,4 +1,5 @@
 import { createAsteroidsGame } from "./asteroids/engine";
+import { createCaidaGame } from "./caida/engine";
 import type { PlayableGame } from "./types";
 
 // Juegos con motor real. Sus ids deben coincidir con los de public.games
@@ -16,6 +17,20 @@ export const PLAYABLE_GAMES: Record<string, PlayableGame> = {
     ],
     startKey: "Space",
     ariaLabel: "ROCAS: campo de asteroides",
+  },
+  caida: {
+    create: createCaidaGame,
+    lives: null,
+    hasLevel: true,
+    extraStats: [{ key: "lines", label: "Líneas", initial: 0 }],
+    controls: [
+      { keys: ["←", "→"], label: "mover" },
+      { keys: ["↑", "X"], label: "rotar" },
+      { keys: ["↓"], label: "bajar" },
+      { keys: ["ESPACIO"], label: "caída" },
+    ],
+    startKey: "Space",
+    ariaLabel: "CAÍDA: tablero de piezas",
   },
 };
 
